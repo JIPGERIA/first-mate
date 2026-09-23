@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# First Mate — 에고이즘 CS 일등항해사
 
-## Getting Started
+> 에고이즘 AX Engineer(채용연계형 인턴) 지원을 위해 만든 **비공식 프로토타입**입니다.
+> 모든 문의·주문은 합성 데이터이며, 브랜드 정책은 각 브랜드 몰의 공개 이용안내(`/shopinfo/guide.html`)를 읽기 전용으로 옮겼습니다.
 
-First, run the development server:
+채널톡으로 들어온 CS 문의를 **분류 → 주문 조회 → 브랜드 정책 근거 초안 → 규칙 라우팅**까지 처리하고,
+상담원은 콘솔에서 초안을 승인·수정·반려합니다. 자동 발송은 하지 않습니다.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+채널톡 문의
+  → ① 분류 (Haiku 4.5)        브랜드 · 의도 · 주문번호 · 위험 신호 · 확신도
+  → ② 주문 조회 (코드)         Cafe24 Admin API 형태 · 429/5xx 재시도 · X-Api-Call-Limit 사전 감속
+  → ③ 초안 (Sonnet 5)         해당 브랜드 KB 전체 + 주문 정보 → 브랜드 보이스 답변 + 정책 인용
+  → ④ 근거 검증 (코드)         인용 문장이 KB 원문에 실제로 있는지 대조
+  → ⑤ 라우팅 (코드 규칙)       원클릭 승인 / 사람 검토 / 사람 전담 + 사유
+  → 상담원 콘솔                승인·수정·반려, 수정률 기록
+모든 단계 → runs / steps 테이블 (지연 · 토큰 · 비용 · 재시도 · 에러)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 왜 이렇게 만들었나
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+설계 결정 9개(ADR)는 [`src/lib/decisions.ts`](src/lib/decisions.ts)와 앱의 `/decisions` 페이지에 있습니다. 요약:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| 결정 | 이유 |
+|---|---|
+| TypeScript 단일 스택 | 개발자 3명 팀에서 런타임을 늘리지 않는다 |
+| Postgres 하나, 벡터 DB 없음 | 데이터가 관계형이고, 현업 지표를 SQL로 뽑는다 |
+| **RAG 안 씀** | 브랜드 KB가 1~3천 토큰이라 통째로 넣고 캐싱하는 편이 정확하고 단순하다 |
+| 분류 Haiku / 초안 Sonnet | 품질이 필요한 곳에만 비싼 모델 |
+| **자동 발송 없음** | 평가셋 '위험한 자동화' 0건 + 운영 수정률이 쌓인 뒤 의도별로 연다 |
+| **라우팅은 코드 규칙** | 자동화할 것과 사람이 할 것의 경계를 읽고·테스트하고·현업과 함께 고칠 수 있게 |
+| 주문 조회는 워크플로 | 항상 필요한 호출은 모델의 선택 대상이 아니다 |
+| Cafe24 어댑터 | 목업 한 함수만 바꾸면 실연동. 공식 호출 제한 규칙 준수 |
+| 구독 로컬 추론 + 조회 전용 배포 | 검증 비용 0원, 운영 전환은 환경변수 한 줄 |
 
-## Learn More
+## 평가
 
-To learn more about Next.js, take a look at the following resources:
+`data/eval/golden.json` — 36건. 브랜드 정책 혼동(무료배송 기준·교환 기한), KB 모순, 주문번호 오류·브랜드 불일치,
+안전·법적 이슈, 프롬프트 인젝션 같은 함정 케이스를 포함합니다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| 지표 | 의미 |
+|---|---|
+| **위험한 자동화** | 사람이 봐야 하는 문의를 원클릭 승인 후보로 보낸 건수. 목표 0 |
+| 라우팅 정확도 | auto / human 구분 |
+| 정책 사실 정확도 | 필수 포함 문구(예: 미뇽맨션 30,000원) + 금지 문구(다른 브랜드 기준) |
+| 브랜드 / 의도 정확도 | 분류 품질 |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 실행
 
-## Deploy on Vercel
+```bash
+pnpm install
+vercel env pull .env.local        # DATABASE_URL (Neon)
+pnpm seed                         # 스키마 + 합성 주문/문의
+pnpm eval                         # 골든셋 처리 + 채점 (기본: 로컬 Claude Code 구독)
+MOCK_FAULT_RATE=0.2 pnpm eval     # 주문 API 장애 20% 주입 → 재시도 경로 검증
+LLM_PROVIDER=anthropic-api pnpm eval   # API 키로 실행
+pnpm dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 구조
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+db/schema.sql                 orders · tickets · runs · steps · reviews · eval_results
+data/kb/*.md                  브랜드별 정책 KB (공개 이용안내 + 브랜드 보이스, 출처 표기)
+data/eval/golden.json         골든셋
+src/lib/llm/                  LLMProvider 인터페이스 · claude-code(구독) · anthropic-api
+src/lib/commerce/cafe24.ts    Cafe24 목업 서버 + 재시도 클라이언트
+src/lib/pipeline/             schemas · prompts · route(규칙) · run(오케스트레이션 + 트레이스)
+src/app/                      받은함 · 문의 상세(초안 편집·트레이스) · 평가 · 설계 결정
+```

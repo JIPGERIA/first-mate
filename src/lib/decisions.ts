@@ -1,0 +1,77 @@
+export type Decision = { id: string; title: string; context: string; decision: string; why: string; rejected: string; revisit: string };
+
+/** 설계 결정 기록(ADR). "공고가 우대하니까"가 아니라 "이 문제에 맞으니까"로 고른 근거. */
+export const DECISIONS: Decision[] = [
+  {
+    id: "ADR-1", title: "TypeScript 단일 스택 (Next.js)",
+    context: "에고이즘 개발자는 3명이고 자사몰 프론트엔드가 React 기반이다. 상담원 콘솔(UI)과 파이프라인(API)이 모두 필요하다.",
+    decision: "UI·API·배치 스크립트를 하나의 TypeScript 저장소로 만든다.",
+    why: "작은 팀에서 언어와 런타임이 늘면 유지보수 비용이 사람 수보다 빨리 늘어난다. 기존 FE 인력이 바로 읽을 수 있다.",
+    rejected: "Python(FastAPI) + React — LLM 생태계는 풍부하지만 런타임이 2개가 된다.",
+    revisit: "대규모 데이터 처리(ETL)가 주 업무가 되면 Python 워커 분리를 검토.",
+  },
+  {
+    id: "ADR-2", title: "Postgres 하나로 (벡터 DB 없음)",
+    context: "문의 ↔ 주문 ↔ 실행 로그 ↔ 상담원 처리 ↔ 평가 결과가 서로 참조한다.",
+    decision: "관계형 Postgres(Neon) 한 곳에 모두 저장하고, 현업 지표는 SQL로 뽑는다.",
+    why: "조인이 핵심인 데이터다. '이번 주 사람 검토로 간 이유 Top 5' 같은 질문이 SQL 한 줄이다.",
+    rejected: "전용 벡터 DB — 지금 규모에선 부품만 늘고 쓸 곳이 없다(ADR-3).",
+    revisit: "KB 검색이 필요해지면 pgvector 확장으로 같은 DB에서 시작.",
+  },
+  {
+    id: "ADR-3", title: "RAG를 쓰지 않는다 (지금은)",
+    context: "브랜드별 정책 KB는 공개 이용안내 기준 약 1~3천 토큰, 5개 브랜드 합계 약 8천 토큰이다.",
+    decision: "해당 브랜드 KB 전체를 컨텍스트에 넣고 프롬프트 캐싱한다. 인용은 KB 원문 대조로 검증한다.",
+    why: "검색 단계가 없으면 '검색 누락으로 인한 오답'이라는 실패 원인 자체가 사라진다. 캐시로 반복 비용도 낮다.",
+    rejected: "처음부터 청킹 + 임베딩 검색 — 작은 KB에선 정확도와 단순성 모두 손해.",
+    revisit: "브랜드 KB가 5만 토큰을 넘거나 FAQ·상품 상세까지 포함할 때 검색 도입.",
+  },
+  {
+    id: "ADR-4", title: "모델 라우팅: 분류는 Haiku, 초안은 Sonnet",
+    context: "분류는 짧고 많고, 초안은 고객에게 나가는 문장이다.",
+    decision: "tier(fast/smart)로 추상화하고 분류=Haiku 4.5, 초안=Sonnet 5.",
+    why: "품질이 필요한 곳에만 비싼 모델을 쓴다. 평가셋으로 분류 정확도가 유지되는지 확인한다.",
+    rejected: "전 단계 상위 모델 — 분류 품질 이득 대비 비용·지연 증가.",
+    revisit: "평가에서 분류 오류가 라우팅 사고로 이어지면 분류 tier를 올린다.",
+  },
+  {
+    id: "ADR-5", title: "자동 발송 없음 — 원클릭 승인까지만",
+    context: "제1원칙은 고객 중심. 잘못 나간 답변 1건의 브랜드 비용이 절감한 시간보다 크다.",
+    decision: "auto_ready는 '상담원이 한 번 읽고 승인하면 되는 초안'이라는 뜻이다. 자동 발송하지 않는다.",
+    why: "평가셋의 '위험한 자동화' 0건과 실제 운영의 수정률 데이터가 쌓인 뒤에 의도(intent)별로 단계적으로 연다.",
+    rejected: "처음부터 자동 응답 — 검증 없이 고객 접점을 넘기는 것.",
+    revisit: "특정 의도에서 2주간 수정률 5% 미만 + 위험한 자동화 0건이면 그 의도만 자동 발송.",
+  },
+  {
+    id: "ADR-6", title: "라우팅은 LLM이 아니라 코드 규칙",
+    context: "공고: '자동화할 수 있는 부분과 사람이 직접 해야 하는 부분을 구분'.",
+    decision: "모델은 신호(의도·위험·근거)를 만들고, 최종 경로는 route.ts의 규칙이 결정한다.",
+    why: "규칙은 읽을 수 있고, 테스트할 수 있고, 현업(CX 리드)과 같이 고칠 수 있다. 사고가 나면 어떤 규칙 때문인지 바로 보인다.",
+    rejected: "모델에게 '사람이 봐야 하면 알려줘'만 맡기기 — 판단 근거가 불투명하다.",
+    revisit: "규칙이 30개를 넘으면 설정 파일로 분리해 CX팀이 직접 편집하게.",
+  },
+  {
+    id: "ADR-7", title: "주문 조회는 에이전트가 아닌 워크플로",
+    context: "주문 관련 의도에서는 주문 조회가 항상 필요하다.",
+    decision: "모델이 도구를 고르게 하지 않고, 분류 결과에 따라 코드가 Cafe24 API를 호출한다.",
+    why: "매번 필요한 호출은 모델의 선택 대상이 아니다. 예측·테스트 가능하고 호출 수가 고정된다.",
+    rejected: "tool-use 에이전트 루프 — 유연하지만 이 문제엔 불필요한 비결정성.",
+    revisit: "재고·배송사 조회 등 도구가 5개 이상으로 늘고 조합이 다양해지면 에이전트화.",
+  },
+  {
+    id: "ADR-8", title: "Cafe24 어댑터 + 공식 호출 제한 준수",
+    context: "실제 Admin API 권한이 없다. Cafe24는 leaky bucket(용량 40, 초당 2 감소)으로 제한하고 초과 시 429를 준다.",
+    decision: "Cafe24처럼 응답하는 목업 + 재시도 클라이언트. X-Api-Call-Limit 80% 초과 시 사전 감속, 429·5xx는 지수 백오프.",
+    why: "연동 코드는 실제와 같게 두고 목업 한 함수만 교체하면 된다. 장애 주입으로 재시도 경로를 실제로 검증한다.",
+    rejected: "주문 JSON을 프롬프트에 직접 넣기 — 연동 난이도(인증·제한·장애)를 숨기는 데모가 된다.",
+    revisit: "실연동 시 OAuth 토큰 갱신과 품목 단위 order_status(실제 Cafe24는 품목별 상태) 반영.",
+  },
+  {
+    id: "ADR-9", title: "구독 기반 로컬 추론 + 배포는 조회 전용",
+    context: "검증 단계에 API 비용을 쓰지 않는다. 개인 구독 인증을 외부 사용자 요청 처리에 쓰는 것은 약관상 부적절하다.",
+    decision: "LLMProvider 인터페이스에 claude-code(로컬 구독)와 anthropic-api 두 구현. 추론은 로컬 배치, 결과는 Neon에 적재, Vercel은 조회·승인만.",
+    why: "검증 비용 0원. 운영 전환은 LLM_PROVIDER 환경변수 한 줄.",
+    rejected: "배포 앱에서 개인 구독으로 실시간 추론 — 약관 위반 소지.",
+    revisit: "파일럿 시작 시 API 키 + 채널톡 webhook으로 실시간 전환.",
+  },
+];
