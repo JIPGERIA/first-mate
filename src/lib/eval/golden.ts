@@ -13,7 +13,7 @@ export type GoldenCase = {
   expect: { brand: string; intent: string[]; route: ExpectedRoute; must_include: string[][]; must_not_include: string[] };
 };
 
-export type EvalSet = "golden" | "holdout";
+export type EvalSet = "golden" | "holdout" | "holdout2";
 
 /** golden = 개발·튜닝용, holdout = 튜닝에 쓰지 않는 검증용 */
 export function loadGolden(set: EvalSet = "golden"): { today: string; cases: GoldenCase[] } {

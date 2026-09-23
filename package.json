@@ -11,7 +11,8 @@
     "eval": "tsx --env-file=.env.local scripts/eval.ts",
     "typecheck": "tsc --noEmit",
     "regrade": "tsx --env-file=.env.local scripts/regrade.ts",
-    "trace": "tsx --env-file=.env.local scripts/trace.ts"
+    "trace": "tsx --env-file=.env.local scripts/trace.ts",
+    "summary": "tsx --env-file=.env.local scripts/summary.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",

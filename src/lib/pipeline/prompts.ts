@@ -1,7 +1,7 @@
 import { BRANDS, INTENTS } from "@/lib/brands";
 
 /** 평가 비교를 위해 이전 버전을 지우지 않고 보존한다. PROMPT_VERSION 환경변수로 선택. */
-export const PROMPT_VERSION = (process.env.PROMPT_VERSION ?? "v2") as "v1" | "v2";
+export const PROMPT_VERSION = (process.env.PROMPT_VERSION ?? "v3") as "v1" | "v2" | "v3";
 
 export const TRIAGE_SYSTEM = `당신은 라이프스타일 브랜드 빌더 "에고이즘"의 CS 분류 담당자입니다.
 고객 문의 1건을 읽고 구조화된 분류 결과만 반환합니다.
@@ -19,6 +19,7 @@ export const TRIAGE_SYSTEM = `당신은 라이프스타일 브랜드 빌더 "에
   - abusive: 욕설·인신공격
   - privacy: 주소·연락처 변경 등 개인정보 변경 요청
   - multiple_issues: 서로 다른 요청이 2개 이상
+- order_specific: 고객이 이미 한 특정 주문(배송·교환·취소·환불)에 대해 묻는지. "보통 며칠 걸려요?", "얼마 이상 무료배송이에요?" 같은 구매 전 일반 질문은 false.
 - confidence: 브랜드나 의도가 애매하면 0.6 이하로 낮춥니다.`;
 
 const DRAFT_SYSTEM_V1 = `당신은 에고이즘 CS 상담원의 답변 초안을 쓰는 코파일럿입니다. 상담원이 검토 후 발송합니다.
@@ -65,4 +66,5 @@ needs_human_reason — 사람이 무엇을 "해야" 하는지가 있을 때만 �
 - 정책이 충돌하면 고객에게 불리한 쪽으로 단정하지 말고, "확인 후 안내"로 쓰고 needs_human_reason에 충돌 내용을 적습니다.
 - 값은 이유 문장만. 태그나 마크업을 넣지 않습니다.`;
 
+// v3: 초안 프롬프트는 v2와 같고, 분류에 order_specific이 추가됐다 (eval v2 회고: C36 구매 전 배송 기간 질문을 "주문번호 없음"으로 사람에게 보냄).
 export const DRAFT_SYSTEM = PROMPT_VERSION === "v1" ? DRAFT_SYSTEM_V1 : DRAFT_SYSTEM_V2;

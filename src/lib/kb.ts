@@ -20,3 +20,13 @@ export function isVerbatimInKb(brand: BrandKey, quote: string): boolean {
   const q = norm(quote);
   return q.length >= 6 && norm(loadKb(brand)).includes(q);
 }
+
+export type KbIssue = { id: string; brand: BrandKey; intents: string[]; title: string; evidence: string[]; action: string };
+
+let issues: KbIssue[] | null = null;
+
+/** 정책 담당자가 확정하기 전까지 사람이 봐야 하는 KB 결함 (data/kb/_issues.json) */
+export function kbIssuesFor(brand: string, intent: string): KbIssue[] {
+  issues ??= JSON.parse(readFileSync(join(process.cwd(), "data/kb/_issues.json"), "utf8")).issues as KbIssue[];
+  return issues.filter((i) => i.brand === brand && i.intents.includes(intent));
+}

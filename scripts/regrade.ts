@@ -6,7 +6,7 @@ import { grade, loadGolden } from "@/lib/eval/golden";
 async function main() {
   const batch = process.argv[2];
   if (!batch) throw new Error("usage: pnpm regrade <batch>");
-  const cases = new Map([...loadGolden("golden").cases, ...loadGolden("holdout").cases].map((c) => [c.id, c]));
+  const cases = new Map([...loadGolden("golden").cases, ...loadGolden("holdout").cases, ...loadGolden("holdout2").cases].map((c) => [c.id, c]));
   const rows = await sql<{ id: number; case_id: string; route: string; triage: { brand: string; intent: string } | null; draft: string | null }[]>`
     select e.id, e.case_id, r.route, r.triage, r.draft from eval_results e join runs r on r.id = e.run_id where e.eval_batch = ${batch}`;
   let changed = 0;

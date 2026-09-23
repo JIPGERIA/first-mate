@@ -1,5 +1,6 @@
 import type { Route } from "@/lib/brands";
 import type { Order } from "@/lib/commerce/cafe24";
+import { kbIssuesFor } from "@/lib/kb";
 import type { Draft, Triage } from "./schemas";
 
 export const ORDER_REQUIRED = new Set(["shipping_status", "damaged_defect", "exchange_return", "cancel_change", "refund_status"]);
@@ -36,7 +37,7 @@ export function decideRoute({ triage, order, draft, ungroundedQuotes }: RouteInp
   if (triage.brand === "unknown") review.push("브랜드 식별 불가");
   if (triage.confidence < 0.7) review.push(`분류 확신도 낮음 (${triage.confidence.toFixed(2)})`);
 
-  if (ORDER_REQUIRED.has(triage.intent)) {
+  if (ORDER_REQUIRED.has(triage.intent) && triage.order_specific !== false) {
     if (order.status === "not_provided") review.push("주문번호 없음 — 주문 특정 필요");
     if (order.status === "not_found") review.push("주문번호 조회 결과 없음");
     if (order.status === "lookup_failed") review.push("주문 조회 API 실패 (재시도 소진)");
@@ -45,6 +46,7 @@ export function decideRoute({ triage, order, draft, ungroundedQuotes }: RouteInp
   if (order.status === "found" && triage.intent === "cancel_change" && ["N20", "N21", "N22", "N30", "N40"].includes(order.order.order_status)) {
     review.push("배송준비 이후 취소·변경 — 물류 확인 필요");
   }
+  for (const issue of kbIssuesFor(triage.brand, triage.intent)) review.push(`KB 결함 ${issue.id}: ${issue.title}`);
   if (triage.intent === "damaged_defect") review.push("파손·불량 — 사진 증빙 확인과 재발송 처리 필요");
   if (draft?.needs_human_reason) review.push(`코파일럿 판단: ${draft.needs_human_reason}`);
   if (draft && draft.citations.length === 0 && triage.intent !== "product_question") review.push("정책 근거 인용 없음");

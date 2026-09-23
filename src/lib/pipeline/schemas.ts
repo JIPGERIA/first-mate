@@ -7,6 +7,7 @@ export const TriageSchema = z.object({
   brand: z.enum([...BRAND_KEYS, "unknown"]).describe("문의 대상 브랜드. 단서가 없으면 unknown"),
   intent: z.enum(INTENT_KEYS as [string, ...string[]]).describe("주된 문의 의도 1개"),
   order_id: z.string().nullable().describe("본문에 있는 주문번호(YYYYMMDD-NNNNNNN). 없으면 null"),
+  order_specific: z.boolean().describe("이미 한 특정 주문에 관한 문의면 true. 구매 전 일반 질문(배송 기간·배송비·정책)은 false"),
   emotion: z.enum(["calm", "frustrated", "angry"]),
   risk_flags: z.array(z.enum(RISK_FLAGS)).describe("해당하는 위험 신호 전부. 없으면 빈 배열"),
   summary: z.string().describe("상담원이 3초 안에 파악할 한 줄 요약"),

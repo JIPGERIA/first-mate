@@ -5,7 +5,7 @@ import { loadGolden } from "@/lib/eval/golden";
 
 async function main() {
   await sql.unsafe(readFileSync("db/schema.sql", "utf8"));
-  const cases = [...loadGolden("golden").cases, ...loadGolden("holdout").cases];
+  const cases = [...loadGolden("golden").cases, ...loadGolden("holdout").cases, ...loadGolden("holdout2").cases];
   let orders = 0;
   for (const c of cases) {
     if (c.order) {
@@ -17,7 +17,7 @@ async function main() {
     }
     await sql`
       insert into tickets (case_id, channel, brand_hint, customer, body, scenario, received_at)
-      values (${c.id}, 'channeltalk', ${c.brand_hint}, ${c.customer}, ${c.body}, ${c.scenario}, now() - (${(c.id.startsWith("H") ? 0 : 40) + 50 - Number(c.id.slice(1))} * interval '7 minutes'))
+      values (${c.id}, 'channeltalk', ${c.brand_hint}, ${c.customer}, ${c.body}, ${c.scenario}, now() - (${(c.id.startsWith("C") ? 40 : 0) + 50 - Number(c.id.slice(1))} * interval '7 minutes'))
       on conflict (case_id) do update set body = excluded.body, scenario = excluded.scenario, brand_hint = excluded.brand_hint`;
   }
   console.log(`seeded: ${orders} orders, ${cases.length} tickets`);

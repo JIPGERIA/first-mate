@@ -59,7 +59,7 @@ export async function processTicket(llm: LLMProvider, t: TicketInput, opts: RunO
     const brand = triage.brand === "unknown" ? null : (triage.brand as BrandKey);
 
     // 2) 주문 조회 — 모델이 아니라 코드가 결정적으로 호출 (워크플로)
-    if (triage.order_id && ORDER_REQUIRED.has(triage.intent)) {
+    if (triage.order_id && ORDER_REQUIRED.has(triage.intent) && triage.order_specific !== false) {
       const lookup = await step("order_lookup", async () => {
         const r = await getOrder(triage!.order_id!);
         return { value: r, attempts: r.attempts, detail: { order_id: triage!.order_id, found: r.found, x_api_call_limit: r.callLimit } };

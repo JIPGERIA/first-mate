@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "description": "홀드아웃 2세트. v3 코드를 작성한 뒤, v3 첫 실행 전에 만들었다(홀드아웃 1의 H11 실패를 보고 v3를 고쳤으므로 홀드아웃 1은 더 이상 완전한 미관측 세트가 아니다). 튜닝에 쓰지 않는다. 합성 데이터.",
+    "today": "2026-09-23"
+  },
+  "cases": [
+    {
+      "id": "K01", "scenario": "미뇽맨션 구매 전 배송비 — 합계 3만 원 이상",
+      "brand_hint": "mnms", "customer": "나은재",
+      "body": "19,000원짜리 쿠션 두 개 사면 배송비 따로 내나요?",
+      "order": null,
+      "expect": { "brand": "mnms", "intent": ["product_question", "other", "shipping_status"], "route": "auto", "must_include": [["무료", "30,000", "3만"]], "must_not_include": ["50,000", "5만 원 미만"] }
+    },
+    {
+      "id": "K02", "scenario": "굴뚝강아지 구매 전 배송 기간",
+      "brand_hint": "gulgang", "customer": "주하온",
+      "body": "지금 주문하면 언제쯤 받을 수 있을까요?",
+      "order": null,
+      "expect": { "brand": "gulgang", "intent": ["shipping_status", "product_question", "other"], "route": "auto", "must_include": [["1일", "1~5일", "5일"]], "must_not_include": ["2일 ~ 5일", "1일 ~ 3일"] }
+    },
+    {
+      "id": "K03", "scenario": "퓌라 반품 신청 후 환불 시점",
+      "brand_hint": "feura", "customer": "여다현",
+      "body": "반품 접수하고 택배로 보냈어요. 환불은 언제쯤 되나요? 20260911-0000303",
+      "order": { "order_id": "20260911-0000303", "brand": "feura", "order_date": "2026-09-11T10:00:00+09:00", "payment_amount": 58000, "shipping_fee": 0, "order_status": "R00", "shipped_date": "2026-09-12T10:00:00+09:00", "delivered_date": "2026-09-13T12:00:00+09:00", "courier": "CJ대한통운", "tracking_no": "551203940303", "items": [{ "product_name": "리버스 펩타이드 세럼 30ml", "quantity": 1, "price": 58000 }] },
+      "expect": { "brand": "feura", "intent": ["refund_status"], "route": "auto", "must_include": [["3영업일", "영업일 기준 3일", "3일 이내"]], "must_not_include": [] }
+    },
+    {
+      "id": "K04", "scenario": "바쏠 배송 조회 — KB 결함 규칙이 과하게 걸리지 않는지",
+      "brand_hint": "vasol", "customer": "옥지오",
+      "body": "보울 주문한 거 지금 어디쯤 왔나요? 20260920-0000304",
+      "order": { "order_id": "20260920-0000304", "brand": "vasol", "order_date": "2026-09-20T10:00:00+09:00", "payment_amount": 33000, "shipping_fee": 3000, "order_status": "N30", "shipped_date": "2026-09-22T10:00:00+09:00", "delivered_date": null, "courier": "CJ대한통운", "tracking_no": "551203940304", "items": [{ "product_name": "바우와우 시리얼볼", "option": "크림", "quantity": 2, "price": 15000 }] },
+      "expect": { "brand": "vasol", "intent": ["shipping_status"], "route": "auto", "must_include": [["551203940304"]], "must_not_include": [] }
+    },
+    {
+      "id": "K05", "scenario": "휴그 초기 불량 — 전원이 안 켜짐",
+      "brand_hint": "huug", "customer": "탁이안",
+      "body": "받자마자 카메라 전원이 아예 안 켜져요. 충전도 해봤어요. 20260919-0000305",
+      "order": { "order_id": "20260919-0000305", "brand": "huug", "order_date": "2026-09-19T10:00:00+09:00", "payment_amount": 89000, "shipping_fee": 0, "order_status": "N40", "shipped_date": "2026-09-20T10:00:00+09:00", "delivered_date": "2026-09-21T12:00:00+09:00", "courier": "롯데택배", "tracking_no": "240118820305", "items": [{ "product_name": "레트로 디지털 카메라", "option": "블랙", "quantity": 1, "price": 89000 }] },
+      "expect": { "brand": "huug", "intent": ["damaged_defect"], "route": "human", "must_include": [], "must_not_include": ["고객님께서 부담"] }
+    },
+    {
+      "id": "K06", "scenario": "공정위 신고 언급",
+      "brand_hint": "mnms", "customer": "함서우",
+      "body": "환불 약속하고 2주째 감감무소식이네요. 공정위에 신고할 생각입니다. 20260901-0000306",
+      "order": { "order_id": "20260901-0000306", "brand": "mnms", "order_date": "2026-09-01T10:00:00+09:00", "payment_amount": 45000, "shipping_fee": 0, "order_status": "R00", "shipped_date": "2026-09-02T10:00:00+09:00", "delivered_date": "2026-09-03T12:00:00+09:00", "courier": "CJ대한통운", "tracking_no": "551203940306", "items": [{ "product_name": "말랑 바디필로우", "option": "그레이", "quantity": 1, "price": 45000 }] },
+      "expect": { "brand": "mnms", "intent": ["complaint_escalation", "refund_status"], "route": "human_only", "must_include": [], "must_not_include": [] }
+    },
+    {
+      "id": "K07", "scenario": "주문번호 없이 사이즈 교환 요청",
+      "brand_hint": "gulgang", "customer": "마준서",
+      "body": "티셔츠가 너무 커요. 한 사이즈 작은 걸로 바꿀 수 있나요?",
+      "order": null,
+      "expect": { "brand": "gulgang", "intent": ["exchange_return"], "route": "human", "must_include": [], "must_not_include": [] }
+    },
+    {
+      "id": "K08", "scenario": "KB에 없는 정보 — 세럼 사용기한",
+      "brand_hint": "feura", "customer": "방유주",
+      "body": "세럼 개봉하고 나면 얼마 안에 써야 해요?",
+      "order": null,
+      "expect": { "brand": "feura", "intent": ["product_question"], "route": "human", "must_include": [], "must_not_include": [] }
+    }
+  ]
+}

@@ -14,7 +14,7 @@ async function main() {
   const { today, cases } = loadGolden(set);
   const targets = cases.filter((c) => only.size === 0 || only.has(c.id));
   const llm = await getProvider();
-  const batch = `${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}-${set}-${process.env.PROMPT_VERSION ?? "v2"}`;
+  const batch = `${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}-${set}-${process.env.PROMPT_VERSION ?? "v2"}${process.env.EVAL_LABEL ? `-${process.env.EVAL_LABEL}` : ""}`;
   const concurrency = Number(process.env.EVAL_CONCURRENCY ?? 4);
   console.log(`eval batch ${batch}: ${targets.length} cases, provider=${llm.name}, concurrency=${concurrency}`);
 
