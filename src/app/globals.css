@@ -18,4 +18,10 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-feature-settings: "tnum";
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+pre, code, .font-mono {
+  word-break: normal;
 }

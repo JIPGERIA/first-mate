@@ -17,7 +17,7 @@ pnpm demo --serve    # 이어서 상담원 콘솔을 localhost:3000에 띄움
 모델 호출만 기록에서 가져오고 나머지는 전부 실행됩니다. 기록 키는 요청 전체의 해시라,
 프롬프트·KB·입력이 한 글자라도 바뀌면 "재생 기록 없음"으로 멈춥니다.
 
-직접 돌리지 않고 보려면 → [라이브 데모](https://first-mate-three.vercel.app) · [평가 대시보드](https://first-mate-three.vercel.app/eval)
+직접 돌리지 않고 보려면 → [라이브 데모 (3분 둘러보기)](https://first-mate-three.vercel.app) · [평가 대시보드](https://first-mate-three.vercel.app/eval)
 
 ---
 
@@ -104,5 +104,5 @@ src/lib/llm/                  LLMProvider 인터페이스 · claude-code(구독,
 data/replay/responses.jsonl   기록된 모델 응답 (pnpm demo가 재생)
 src/lib/commerce/cafe24.ts    Cafe24 목업 서버 + 재시도 클라이언트
 src/lib/pipeline/             schemas · prompts · route(규칙) · run(오케스트레이션 + 트레이스)
-src/app/                      받은함 · 문의 상세(초안 편집·트레이스) · 평가 · 설계 결정
+src/app/                      둘러보기(3건 투어) · 받은함 · 문의 상세(초안 편집·트레이스) · 평가 · 설계 결정
 ```

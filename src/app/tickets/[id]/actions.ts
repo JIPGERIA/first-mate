@@ -31,5 +31,6 @@ export async function submitReview(formData: FormData) {
             values (${ticketId}, ${runId}, ${action}, ${intent === "reject" ? null : finalText}, ${ratio.toFixed(4)})`;
   await sql`update tickets set status = ${action} where id = ${ticketId}`;
   revalidatePath("/");
+  revalidatePath("/inbox");
   redirect(`/tickets/${ticketId}`);
 }
