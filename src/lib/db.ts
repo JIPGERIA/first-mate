@@ -9,9 +9,10 @@ const globalForDb = globalThis as unknown as { sql?: postgres.Sql };
 export const sql =
   globalForDb.sql ??
   postgres(url, {
-    ssl: url.includes("localhost") ? false : "require",
+    ssl: /localhost|127\.0\.0\.1/.test(url) ? false : "require",
     prepare: false,
-    max: process.env.VERCEL_REGION ? 1 : 5,
+    // Vercel 함수는 1개, 로컬 데모(PGlite 소켓)는 연결을 하나만 받으므로 DB_POOL_MAX=1
+    max: Number(process.env.DB_POOL_MAX ?? (process.env.VERCEL_REGION ? 1 : 5)),
     idle_timeout: 20,
   });
 

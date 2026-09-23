@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { sql } from "@/lib/db";
 import { RetryableError, withRetry } from "@/lib/retry";
 
@@ -38,7 +39,16 @@ type HttpLike = { status: number; headers: Record<string, string>; body: unknown
 // 출처: https://apidocs.cafe24.com/docs/guide/api-quota — Admin API 버킷 용량 40, 초당 2회 감소
 const BUCKET_SIZE = Number(process.env.MOCK_BUCKET_SIZE ?? "40");
 const LEAK_PER_SEC = 2;
-let bucket = { level: 0, at: Date.now() };
+const bucket = { level: 0, at: Date.now() };
+const callCount = new Map<string, number>();
+
+/** 장애를 난수가 아니라 (주문번호, 호출 순번)으로 결정한다 → 같은 설정이면 재시도 경로까지 매번 같게 재현된다 */
+function injectedFault(orderId: string, rate: number): boolean {
+  const n = (callCount.get(orderId) ?? 0) + 1;
+  callCount.set(orderId, n);
+  const h = createHash("sha256").update(`${orderId}#${n}`).digest().readUInt32BE(0);
+  return h / 0xffffffff < rate;
+}
 
 function takeToken(): { ok: boolean; level: number } {
   const now = Date.now();
@@ -54,7 +64,7 @@ async function mockCafe24GetOrder(orderId: string): Promise<HttpLike> {
   const token = takeToken();
   const limit = `${Math.ceil(token.level)}/${BUCKET_SIZE}`;
   if (!token.ok) return { status: 429, headers: { "x-api-call-limit": `${BUCKET_SIZE}/${BUCKET_SIZE}` }, body: { error: { code: 429, message: "Too Many Requests" } } };
-  if (Math.random() < faultRate) return { status: 503, headers: { "x-api-call-limit": limit }, body: { error: { code: 503, message: "Service Unavailable" } } };
+  if (injectedFault(orderId, faultRate)) return { status: 503, headers: { "x-api-call-limit": limit }, body: { error: { code: 503, message: "Service Unavailable" } } };
 
   const rows = await sql<Order[]>`select * from orders where order_id = ${orderId}`;
   if (rows.length === 0) return { status: 404, headers: { "x-api-call-limit": limit }, body: { error: { code: 404, message: "No API found" } } };

@@ -67,12 +67,12 @@ export const DECISIONS: Decision[] = [
     revisit: "실연동 시 OAuth 토큰 갱신과 품목 단위 order_status(실제 Cafe24는 품목별 상태) 반영.",
   },
   {
-    id: "ADR-9", title: "구독 기반 로컬 추론 + 배포는 조회 전용",
-    context: "검증 단계에 API 비용을 쓰지 않는다. 개인 구독 인증을 외부 사용자 요청 처리에 쓰는 것은 약관상 부적절하다.",
-    decision: "LLMProvider 인터페이스에 claude-code(로컬 구독)와 anthropic-api 두 구현. 추론은 로컬 배치, 결과는 Neon에 적재, Vercel은 조회·승인만.",
-    why: "검증 비용 0원. 운영 전환은 LLM_PROVIDER 환경변수 한 줄.",
-    rejected: "배포 앱에서 개인 구독으로 실시간 추론 — 약관 위반 소지.",
-    revisit: "파일럿 시작 시 API 키 + 채널톡 webhook으로 실시간 전환.",
+    id: "ADR-9", title: "구독 로컬 추론 + 기록 재생 (API 키 없음)",
+    context: "검증 단계에 API 비용을 쓰지 않는다. 코드를 확인하는 사람은 키도 구독도 없을 수 있다. 개인 구독 인증을 외부 사용자 요청 처리에 쓰는 것은 부적절하다.",
+    decision: "LLMProvider 인터페이스에 claude-code(로컬 구독, 응답 기록 가능)와 replay(기록 재생) 두 구현. 배포 앱은 조회·승인 전용이고, 누구나 pnpm demo로 기록을 재생해 평가 수치를 재현한다.",
+    why: "검증 비용 0원이면서 재현 가능하다. 재생 키는 요청 전체(프롬프트·KB·입력)의 해시라 코드가 바뀌면 재생이 멈춘다. 재현 결과가 현재 코드와 어긋날 수 없다.",
+    rejected: "한 번도 돌려보지 않은 API 공급자를 두고 '환경변수 한 줄로 전환'이라고 주장하기 / 배포 앱에서 개인 구독으로 실시간 추론.",
+    revisit: "파일럿 시작 시 같은 인터페이스로 API 공급자 한 파일 추가 + 채널톡 webhook, 첫 실행은 평가셋으로 검증.",
   },
   {
     id: "ADR-10", title: "모델이 못 고치는 건 데이터를 고친다 — KB 결함 등록부",

@@ -22,6 +22,6 @@ export type StructuredRequest<T> = {
 export type StructuredResult<T> = { data: T; usage: LLMUsage; ms: number; model: string };
 
 export interface LLMProvider {
-  readonly name: "claude-code" | "anthropic-api";
+  readonly name: "claude-code" | "replay";
   structured<T>(req: StructuredRequest<T>): Promise<StructuredResult<T>>;
 }
